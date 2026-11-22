@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>حروفي — تعلم الحروف العربية</title>
+<meta name="theme-color" content="#58cc02">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&family=Noto+Naskh+Arabic:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ======= HOME: letters grid ======= -->
+<section id="screen-home" class="screen active">
+  <header class="home-header">
+    <div class="mascot">🦉</div>
+    <h1>حروفي</h1>
+    <p>هيا نتعلم الحروف العربية معًا!</p>
+  </header>
+  <div id="letters-grid" class="letters-grid"></div>
+</section>
+
+<!-- ======= LETTER HUB ======= -->
+<section id="screen-letter" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="home">✕</button>
+    <div class="letter-chip" id="hub-chip">ب</div>
+  </div>
+  <h2 class="hub-title" id="hub-title">حرف الباء</h2>
+  <div class="hub-cards">
+    <button class="hub-card c-blue" data-act="forms"><span class="hc-emoji">🧩</span>أشكال الحرف</button>
+    <button class="hub-card c-green" data-act="words"><span class="hc-emoji">🍎</span>كلمات الحرف</button>
+    <button class="hub-card c-purple" data-act="trace"><span class="hc-emoji">✏️</span>اكتب الحرف</button>
+    <button class="hub-card c-orange" data-act="game"><span class="hc-emoji">🎮</span>لعبة الحرف</button>
+  </div>
+</section>
+
+<!-- ======= FORMS ======= -->
+<section id="screen-forms" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="letter">✕</button>
+    <div class="progress"><div class="progress-fill" style="width:100%"></div></div>
+  </div>
+  <h2 class="screen-title">أشكال حرف <span id="forms-letter-name"></span></h2>
+  <div class="forms-grid">
+    <button class="form-card" data-form="isolated"><div class="form-label">في أول الكلمة</div><div class="form-glyph" id="form-initial"></div></button>
+    <button class="form-card" data-form="medial"><div class="form-label">في وسط الكلمة</div><div class="form-glyph" id="form-medial"></div></button>
+    <button class="form-card" data-form="final"><div class="form-label">في آخر الكلمة</div><div class="form-glyph" id="form-final"></div></button>
+    <button class="form-card" data-form="alone"><div class="form-label">وحده</div><div class="form-glyph" id="form-alone"></div></button>
+  </div>
+  <p class="hint">اضغط على أي شكل لتسمع اسم الحرف 🔊</p>
+</section>
+
+<!-- ======= WORDS ======= -->
+<section id="screen-words" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="letter">✕</button>
+    <div class="progress"><div class="progress-fill" id="words-progress" style="width:0%"></div></div>
+  </div>
+  <h2 class="screen-title">كلمات تبدأ بحرف <span id="words-letter"></span></h2>
+  <div id="words-list" class="words-list"></div>
+</section>
+
+<!-- ======= TRACE ======= -->
+<section id="screen-trace" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="letter">✕</button>
+    <div class="progress"><div class="progress-fill" id="trace-progress"></div></div>
+  </div>
+  <div class="trace-word" id="trace-word"></div>
+  <div class="trace-stage">
+    <div class="rule-lines"><span></span><span></span><span></span></div>
+    <canvas id="trace-canvas"></canvas>
+    <div id="trace-start" class="trace-start">⬇</div>
+    <div id="trace-done" class="trace-done hidden">🎉 أحسنت! 🎉</div>
+  </div>
+  <div class="trace-actions">
+    <button id="trace-clear" class="duo-btn gray">امسح 🧽</button>
+    <button id="trace-sound" class="duo-btn blue">اسمع الحرف 🔊</button>
+  </div>
+</section>
+
+<!-- ======= GAME ======= -->
+<section id="screen-game" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="letter">✕</button>
+    <div class="progress"><div class="progress-fill" id="game-progress"></div></div>
+  </div>
+  <h2 class="screen-title" id="game-question"></h2>
+  <div id="game-sentence" class="game-sentence"></div>
+  <div id="game-feedback" class="game-feedback"></div>
+  <button id="game-next" class="duo-btn green hidden">التالي ⬅</button>
+</section>
+
+<div id="confetti-layer"></div>
+<script src="letters.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
