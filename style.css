@@ -124,3 +124,19 @@ body{
 #confetti-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
 .confetti{position:absolute;top:-30px;font-size:26px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+/* ---------- match ---------- */
+.c-teal{background:#00b8a9}
+.match-grid{display:flex;gap:18px;justify-content:space-between;padding:0 8px;margin-top:10px}
+.match-col{display:flex;flex-direction:column;gap:14px;flex:1}
+.match-tile{
+ border-radius:18px;padding:14px 8px;background:var(--paper);border:3px solid var(--line);
+ font-family:inherit;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.08);
+ display:flex;align-items:center;justify-content:center;min-height:72px;transition:background .15s,border-color .15s;
+}
+.match-tile.pic{font-size:44px;line-height:1}
+.match-tile.word{font-size:24px;font-weight:800;color:var(--ink)}
+.match-tile.sel{border-color:var(--blue);background:#ddf4ff}
+.match-tile.hit{border-color:var(--green);background:#d7ffb8;pointer-events:none}
+.match-tile.wrong{border-color:var(--red);background:#ffdfe0;animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}

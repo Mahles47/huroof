@@ -34,6 +34,7 @@
     <button class="hub-card c-green" data-act="words"><span class="hc-emoji">🍎</span>كلمات الحرف</button>
     <button class="hub-card c-purple" data-act="trace"><span class="hc-emoji">✏️</span>اكتب الحرف</button>
     <button class="hub-card c-orange" data-act="game"><span class="hc-emoji">🎮</span>لعبة الحرف</button>
+    <button class="hub-card c-teal" data-act="match"><span class="hc-emoji">🖼️</span>وصّل الكلمة بالصورة</button>
   </div>
 </section>
 
@@ -80,6 +81,20 @@
     <button id="trace-clear" class="duo-btn gray">امسح 🧽</button>
     <button id="trace-sound" class="duo-btn blue">اسمع الحرف 🔊</button>
   </div>
+</section>
+
+<!-- ======= MATCH ======= -->
+<section id="screen-match" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="letter">✕</button>
+    <div class="progress"><div class="progress-fill" id="match-progress"></div></div>
+  </div>
+  <h2 class="screen-title">وصّل كل كلمة بالصورة الصح</h2>
+  <div class="match-grid">
+    <div id="match-pics" class="match-col"></div>
+    <div id="match-words" class="match-col"></div>
+  </div>
+  <div id="match-feedback" class="game-feedback"></div>
 </section>
 
 <!-- ======= GAME ======= -->

@@ -73,6 +73,7 @@ function openActivity(a){
  else if(a==="words")renderWords();
  else if(a==="trace")initTrace();
  else if(a==="game")initGame();
+ else if(a==="match")renderMatch();
 }
 
 /* ---------- forms ---------- */
@@ -211,6 +212,55 @@ canvas.addEventListener("pointermove",e=>{if(!tracing)return;const[x,y]=pos(e);t
 addEventListener("pointerup",()=>{tracing=false;lastX=null;});
 $("#trace-clear").onclick=()=>buildTrace(LETTERS[cur][0]);
 $("#trace-sound").onclick=()=>playKey("l"+cur,LETTERS[cur][1]);
+
+/* ---------- match ---------- */
+function renderMatch(){
+ const L=LETTERS[cur];
+ $("#match-progress").style.width="0%";
+ const fb=$("#match-feedback");fb.textContent="";fb.className="game-feedback";
+ const picsBox=$("#match-pics"),wordsBox=$("#match-words");
+ picsBox.innerHTML="";wordsBox.innerHTML="";
+ const items=L[2].map(([w,e],i)=>({w,e,i}));
+ const shuffled=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(p=>p[1]);
+ let selPic=null,selWord=null,matched=0;
+ function tryMatch(){
+  if(!selPic||!selWord)return;
+  const p=selPic,w=selWord;selPic=null;selWord=null;
+  if(p.dataset.i===w.dataset.i){
+   p.classList.remove("sel");w.classList.remove("sel");
+   p.classList.add("hit");w.classList.add("hit");
+   matched++;
+   playKey(wordKey(p.dataset.w),p.dataset.w);
+   $("#match-progress").style.width=Math.round(matched/L[2].length*100)+"%";
+   if(matched>=L[2].length){
+    confetti();playKey("bravo","برافو عليك");
+    fb.textContent="برافو عليك! 🌟";fb.className="game-feedback good";
+   }
+  }else{
+   p.classList.add("wrong");w.classList.add("wrong");
+   playKey("tryagain","جرّب تاني");
+   setTimeout(()=>{p.classList.remove("sel","wrong");w.classList.remove("sel","wrong");},450);
+  }
+ }
+ shuffled(items).forEach(it=>{
+  const b=document.createElement("button");
+  b.className="match-tile pic";b.textContent=it.e;b.dataset.i=it.i;b.dataset.w=it.w;
+  b.onclick=()=>{if(b.classList.contains("hit"))return;
+   picsBox.querySelectorAll(".sel").forEach(x=>x.classList.remove("sel"));
+   b.classList.add("sel");selPic=b;tryMatch();};
+  picsBox.appendChild(b);
+ });
+ shuffled(items).forEach(it=>{
+  const b=document.createElement("button");
+  b.className="match-tile word";b.textContent=it.w;b.dataset.i=it.i;
+  b.onclick=()=>{if(b.classList.contains("hit"))return;
+   playKey(wordKey(it.w),it.w);
+   wordsBox.querySelectorAll(".sel").forEach(x=>x.classList.remove("sel"));
+   b.classList.add("sel");selWord=b;tryMatch();};
+  wordsBox.appendChild(b);
+ });
+ show("match");
+}
 
 /* ---------- game ---------- */
 const norm=s=>s.replace(/[ً-ْـ]/g,"").replace(/[أإآ]/g,"ا").replace(/ى/g,"ي");
