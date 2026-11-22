@@ -155,6 +155,7 @@ function initTrace(){
  }
  $("#trace-progress").style.width="0%";
  $("#trace-done").classList.add("hidden");
+ $("#trace-sound").textContent=mode==="digit"?"اسمع الرقم 🔊":"اسمع الحرف 🔊";
  traceFinished=false;
  show("trace");
  requestAnimationFrame(()=>buildTrace(traceCtx.ch));
