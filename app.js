@@ -126,6 +126,7 @@ function initTrace(){
  show("trace");
  requestAnimationFrame(()=>buildTrace(ch));
 }
+let maskCanvas=null,strokeCanvas=null,strokeCtx=null,clipCanvas=null,clipCtx=null;
 function buildTrace(ch){
  const st=$(".trace-stage"),W=st.clientWidth,H=st.clientHeight;
  canvas.width=W;canvas.height=H;
@@ -140,30 +141,46 @@ function buildTrace(ch){
  mask=new Uint8Array(W*H);maskCount=0;
  for(let i=0;i<W*H;i++){if(img[i*4+3]>40){mask[i]=1;maskCount++;}}
  covered=new Uint8Array(W*H);coveredCount=0;
+ // solid silhouette of the glyph: strokes get clipped to this (like Duolingo ABC)
+ maskCanvas=off;
+ // stroke layer + reusable clipping buffer
+ strokeCanvas=document.createElement("canvas");strokeCanvas.width=W;strokeCanvas.height=H;
+ strokeCtx=strokeCanvas.getContext("2d");
+ strokeCtx.lineCap="round";strokeCtx.lineJoin="round";strokeCtx.strokeStyle="#1cb0f6";strokeCtx.fillStyle="#1cb0f6";
+ clipCanvas=document.createElement("canvas");clipCanvas.width=W;clipCanvas.height=H;
+ clipCtx=clipCanvas.getContext("2d");
  // start dot at topmost mask pixel
  let sx=W/2,sy=0,found=false;
  outer:for(let y=0;y<H&&!found;y++)for(let x=0;x<W;x++){if(mask[y*W+x]){sx=x;sy=y;found=true;break outer;}}
  const dot=$("#trace-start");
  dot.style.left=sx+"px";dot.style.top=sy+"px";dot.classList.remove("hidden");
- drawGuide();
+ lastX=null;
+ renderTrace();
 }
-function drawGuide(){
+function renderTrace(){
  const W=canvas.width,H=canvas.height;
  tctx.clearRect(0,0,W,H);
  // gray guide glyph
  tctx.save();tctx.globalAlpha=.18;
- const size=Math.min(H*0.8,W*0.7);
- tctx.font="700 "+size+"px 'Noto Naskh Arabic',serif";
- tctx.textAlign="center";tctx.textBaseline="middle";tctx.fillStyle="#9aa3b2";
- tctx.fillText(glyphFor(LETTERS[cur][0],traceForm),W/2,H/2);
- tctx.restore();
- // repaint covered strokes
- tctx.save();tctx.fillStyle="#1cb0f6";
- for(let y=0;y<H;y+=2)for(let x=0;x<W;x+=2)if(covered[y*W+x])tctx.fillRect(x,y,2,2);
- tctx.restore();
+ tctx.drawImage(maskCanvas,0,0);
+ tctx.globalAlpha=1;tctx.restore();
+ // strokes clipped to the glyph silhouette
+ clipCtx.globalCompositeOperation="source-over";
+ clipCtx.clearRect(0,0,W,H);
+ clipCtx.drawImage(strokeCanvas,0,0);
+ clipCtx.globalCompositeOperation="destination-in";
+ clipCtx.drawImage(maskCanvas,0,0);
+ clipCtx.globalCompositeOperation="source-over";
+ tctx.drawImage(clipCanvas,0,0);
 }
+let lastX=null,lastY=null;
 function traceAt(x,y){
  const W=canvas.width,H=canvas.height,r=Math.max(14,W*0.03);
+ // paint the stroke on the stroke layer (renderTrace clips it to the letter)
+ if(lastX===null){strokeCtx.beginPath();strokeCtx.arc(x,y,r,0,7);strokeCtx.fill();}
+ else{strokeCtx.lineWidth=r*2;strokeCtx.beginPath();strokeCtx.moveTo(lastX,lastY);strokeCtx.lineTo(x,y);strokeCtx.stroke();}
+ lastX=x;lastY=y;
+ // coverage counts only pixels inside the letter outline
  let gained=0;
  for(let dy=-r;dy<=r;dy+=2)for(let dx=-r;dx<=r;dx+=2){
   const px=Math.round(x+dx),py=Math.round(y+dy);
@@ -171,9 +188,7 @@ function traceAt(x,y){
   const i=py*W+px;
   if(!covered[i]){covered[i]=1;if(mask[i]){coveredCount++;gained++;}}
  }
- // paint the stroke visually
- tctx.fillStyle="#1cb0f6";
- tctx.beginPath();tctx.arc(x,y,r,0,7);tctx.fill();
+ renderTrace();
  if(gained>0){
   const pct=Math.min(100,Math.round(coveredCount/maskCount*100*1.5));
   $("#trace-progress").style.width=pct+"%";
@@ -191,9 +206,9 @@ function finishTrace(){
  setTimeout(()=>{$("#trace-done").classList.add("hidden");buildTrace(ch);},2600);
 }
 function pos(e){const r=canvas.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return[p.clientX-r.left,p.clientY-r.top];}
-canvas.addEventListener("pointerdown",e=>{tracing=true;$("#trace-start").classList.add("hidden");const[x,y]=pos(e);traceAt(x,y);});
+canvas.addEventListener("pointerdown",e=>{tracing=true;lastX=null;$("#trace-start").classList.add("hidden");const[x,y]=pos(e);traceAt(x,y);});
 canvas.addEventListener("pointermove",e=>{if(!tracing)return;const[x,y]=pos(e);traceAt(x,y);});
-addEventListener("pointerup",()=>tracing=false);
+addEventListener("pointerup",()=>{tracing=false;lastX=null;});
 $("#trace-clear").onclick=()=>buildTrace(LETTERS[cur][0]);
 $("#trace-sound").onclick=()=>playKey("l"+cur,LETTERS[cur][1]);
 
