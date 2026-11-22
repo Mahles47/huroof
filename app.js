@@ -180,15 +180,15 @@ function traceAt(x,y){
  if(lastX===null){strokeCtx.beginPath();strokeCtx.arc(x,y,r,0,7);strokeCtx.fill();}
  else{strokeCtx.lineWidth=r*2;strokeCtx.beginPath();strokeCtx.moveTo(lastX,lastY);strokeCtx.lineTo(x,y);strokeCtx.stroke();}
  lastX=x;lastY=y;
- // coverage counts only pixels inside the letter outline
- let gained=0;
- for(let dy=-r;dy<=r;dy+=2)for(let dx=-r;dx<=r;dx+=2){
-  const px=Math.round(x+dx),py=Math.round(y+dy);
-  if(px<0||py<0||px>=W||py>=H)continue;
-  const i=py*W+px;
-  if(!covered[i]){covered[i]=1;if(mask[i]){coveredCount++;gained++;}}
- }
+ // Count the actual visible fill, including every point along a fast stroke.
  renderTrace();
+ const painted=clipCtx.getImageData(0,0,W,H).data;
+ const previousCount=coveredCount;
+ coveredCount=0;
+ for(let i=0;i<mask.length;i++){
+  if(mask[i]&&painted[i*4+3]>40)coveredCount++;
+ }
+ const gained=coveredCount-previousCount;
  if(gained>0){
   const pct=Math.min(100,Math.round(coveredCount/maskCount*100*1.5));
   $("#trace-progress").style.width=pct+"%";
