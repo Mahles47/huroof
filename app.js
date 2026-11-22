@@ -205,14 +205,14 @@ function tapWord(b){
  if(b.dataset.has==="1"){
   b.classList.add("hit");say(b.textContent);
   if(gameWords.every(w=>w.dataset.has!=="1"||w.classList.contains("hit"))){
-   $("#game-feedback").textContent="برافو عليك! 🌟";$("#game-feedback").classList.add("good");
+   $("#game-feedback").textContent="برافو عليك! 🌟";$("#game-feedback").className="game-feedback good";
    $("#game-progress").style.width=((gameRound+1)/LETTERS[cur][3].length*100)+"%";
    confetti();
    $("#game-next").classList.remove("hidden");
   }
  }else{
   b.classList.add("miss");
-  $("#game-feedback").textContent="جرّب تاني 💪";$("#game-feedback").classList.add("bad");
+  $("#game-feedback").textContent="جرّب تاني 💪";$("#game-feedback").className="game-feedback bad";
   setTimeout(()=>b.classList.remove("miss"),600);
  }
 }
