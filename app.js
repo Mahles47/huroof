@@ -13,13 +13,28 @@ function pickVoice(){
  voice=vs.find(v=>/ar[-_]EG/i.test(v.lang))||vs[0]||null;
 }
 if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
-function say(text){
+function ttsSay(text){
  if(!("speechSynthesis" in window))return;
  speechSynthesis.cancel();
  const u=new SpeechSynthesisUtterance(text);
  u.lang="ar-EG";if(voice)u.voice=voice;u.rate=.8;u.pitch=1.1;
  speechSynthesis.speak(u);
 }
+let audioEl=null;
+function playKey(key,tts,next){
+ if("speechSynthesis" in window)speechSynthesis.cancel();
+ if(audioEl){audioEl.pause();audioEl=null;}
+ if(!key){if(tts)ttsSay(tts);if(next)next();return;}
+ const a=new Audio("audio/"+key+".mp3");
+ audioEl=a;
+ let fellBack=false;
+ const fallback=()=>{if(fellBack)return;fellBack=true;audioEl=null;if(tts)ttsSay(tts);if(next)next();};
+ a.onerror=fallback;
+ a.onended=()=>{if(audioEl===a)audioEl=null;if(next)next();};
+ const p=a.play();
+ if(p&&p.catch)p.catch(fallback);
+}
+function wordKey(text){const f=AUDIO_WORDS[norm(text)];return f?f.slice(0,-4):null;}
 
 /* ---------- navigation ---------- */
 function show(name){
@@ -40,7 +55,7 @@ function renderHome(){
   b.className="letter-tile"+(done[L[0]]?" done":"");
   b.style.background=COLORS[i%COLORS.length];
   b.textContent=L[0];
-  b.onclick=()=>{cur=i;openLetter();say(L[1]);};
+  b.onclick=()=>{cur=i;openLetter();playKey("l"+i,L[1]);};
   g.appendChild(b);
  });
 }
@@ -70,7 +85,7 @@ function renderForms(){
  $("#form-alone").textContent=ch;
  show("forms");
 }
-document.querySelectorAll(".form-card").forEach(c=>c.onclick=()=>say(LETTERS[cur][1]));
+document.querySelectorAll(".form-card").forEach(c=>c.onclick=()=>playKey("l"+cur,LETTERS[cur][1]));
 
 /* ---------- words ---------- */
 function renderWords(){
@@ -84,7 +99,7 @@ function renderWords(){
   const first=w.replace(/^ال/,"").charAt(0)===ch||w.includes(ch);
   const html=w.replace(new RegExp(ch,"g"),m=>"<b>"+m+"</b>");
   c.innerHTML='<span class="word-emoji">'+e+'</span><span class="word-text">'+html+'</span><span class="word-sound">🔊</span>';
-  c.onclick=()=>{say(w);if(!c.dataset.h){c.dataset.h=1;heard++;$("#words-progress").style.width=Math.round(heard/L[2].length*100)+"%";if(heard>=L[2].length)confetti();}};
+  c.onclick=()=>{playKey(wordKey(w),w);if(!c.dataset.h){c.dataset.h=1;heard++;$("#words-progress").style.width=Math.round(heard/L[2].length*100)+"%";if(heard>=L[2].length)confetti();}};
   list.appendChild(c);
  });
  show("words");
@@ -172,7 +187,7 @@ function finishTrace(){
  $("#trace-progress").style.width="100%";
  const ch=LETTERS[cur][0];
  if(!done[ch]){done[ch]=1;saveDone();}
- confetti();say("أحسنت! حرف "+LETTERS[cur][1]);
+ confetti();playKey("ahsant","أحسنت",()=>playKey("l"+cur,LETTERS[cur][1]));
  setTimeout(()=>{$("#trace-done").classList.add("hidden");buildTrace(ch);},2600);
 }
 function pos(e){const r=canvas.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return[p.clientX-r.left,p.clientY-r.top];}
@@ -180,7 +195,7 @@ canvas.addEventListener("pointerdown",e=>{tracing=true;$("#trace-start").classLi
 canvas.addEventListener("pointermove",e=>{if(!tracing)return;const[x,y]=pos(e);traceAt(x,y);});
 addEventListener("pointerup",()=>tracing=false);
 $("#trace-clear").onclick=()=>buildTrace(LETTERS[cur][0]);
-$("#trace-sound").onclick=()=>say(LETTERS[cur][1]);
+$("#trace-sound").onclick=()=>playKey("l"+cur,LETTERS[cur][1]);
 
 /* ---------- game ---------- */
 const norm=s=>s.replace(/[ً-ْـ]/g,"").replace(/[أإآ]/g,"ا").replace(/ى/g,"ي");
@@ -203,9 +218,10 @@ function renderGameRound(){
 function tapWord(b){
  if(b.classList.contains("hit"))return;
  if(b.dataset.has==="1"){
-  b.classList.add("hit");say(b.textContent);
+  b.classList.add("hit");playKey(wordKey(b.textContent),b.textContent);
   if(gameWords.every(w=>w.dataset.has!=="1"||w.classList.contains("hit"))){
    $("#game-feedback").textContent="برافو عليك! 🌟";$("#game-feedback").className="game-feedback good";
+   playKey("bravo","برافو عليك");
    $("#game-progress").style.width=((gameRound+1)/LETTERS[cur][3].length*100)+"%";
    confetti();
    $("#game-next").classList.remove("hidden");
@@ -218,7 +234,7 @@ function tapWord(b){
 }
 $("#game-next").onclick=()=>{
  gameRound++;
- if(gameRound>=LETTERS[cur][3].length){show("letter");say("رائع! خلّصت لعبة حرف "+LETTERS[cur][1]);}
+ if(gameRound>=LETTERS[cur][3].length){show("letter");playKey("gamedone","رائع خلصت اللعبة");}
  else renderGameRound();
 };
 
