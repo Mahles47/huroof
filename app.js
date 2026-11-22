@@ -2,9 +2,13 @@
 const $=s=>document.querySelector(s);
 const TAT="ـ";
 const COLORS=["#ff4b4b","#1cb0f6","#58cc02","#ff9600","#ce82ff","#ff5ea8","#00b8a9","#ffc800"];
-let cur=0,traceForm="isolated";
+let cur=0,curD=0,mode="letter",traceForm="isolated";
 const done=JSON.parse(localStorage.getItem("huroof-done")||"{}");
 const saveDone=()=>localStorage.setItem("huroof-done",JSON.stringify(done));
+const DIGITS=[["٠","صفر"],["١","واحد"],["٢","اتنين"],["٣","تلاتة"],["٤","اربعة"],["٥","خمسة"],["٦","ستة"],["٧","سبعة"],["٨","تمانية"],["٩","تسعة"]];
+let stars=JSON.parse(localStorage.getItem("noon-stars")||"0");
+function renderStars(){const c=$("#stars-chip");if(c)c.textContent="⭐ "+stars;}
+function addStars(n){stars+=n;localStorage.setItem("noon-stars",JSON.stringify(stars));renderStars();const c=$("#stars-chip");c.classList.remove("bump");void c.offsetWidth;c.classList.add("bump");}
 
 /* ---------- speech ---------- */
 let voice=null;
@@ -38,13 +42,16 @@ function wordKey(text){const f=AUDIO_WORDS[norm(text)];return f?f.slice(0,-4):nu
 
 /* ---------- navigation ---------- */
 function show(name){
+ if(name!=="catch")stopCatch();
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
  $("#screen-"+name).classList.add("active");
  window.scrollTo(0,0);
 }
 document.addEventListener("click",e=>{
  const go=e.target.closest("[data-go]");if(go){show(go.dataset.go==="letter"?"letter":go.dataset.go);return;}
- const act=e.target.closest("[data-act]");if(act){openActivity(act.dataset.act);}
+ const act=e.target.closest("[data-act]");if(act){openActivity(act.dataset.act);return;}
+ const gm=e.target.closest("[data-game]");if(gm){({memory:initMemory,catch:initCatch,quiz:initQuiz})[gm.dataset.game]();return;}
+ const da=e.target.closest("[data-dact]");if(da){mode="digit";if(da.dataset.dact==="trace")initTrace();else initCount();return;}
 });
 
 /* ---------- home ---------- */
@@ -58,6 +65,23 @@ function renderHome(){
   b.onclick=()=>{cur=i;openLetter();playKey("l"+i,L[1]);};
   g.appendChild(b);
  });
+ const dg=$("#digits-grid");dg.innerHTML="";
+ DIGITS.forEach((D,i)=>{
+  const b=document.createElement("button");
+  b.className="letter-tile";
+  b.style.background=COLORS[(i+3)%COLORS.length];
+  b.textContent=D[0];
+  b.onclick=()=>{curD=i;openDigit();playKey("d"+i,D[1]);};
+  dg.appendChild(b);
+ });
+ renderStars();
+}
+function openDigit(){
+ const D=DIGITS[curD];
+ $("#digit-chip").textContent=D[0];
+ $("#digit-chip").style.background=COLORS[(curD+3)%COLORS.length];
+ $("#digit-title").textContent="رقم "+D[1];
+ show("digit");
 }
 
 /* ---------- letter hub ---------- */
@@ -69,6 +93,7 @@ function openLetter(){
  show("letter");
 }
 function openActivity(a){
+ mode="letter";
  if(a==="forms")renderForms();
  else if(a==="words")renderWords();
  else if(a==="trace")initTrace();
@@ -116,16 +141,23 @@ function glyphFor(ch,form){
  if(form==="final")return TAT+ch;
  return ch;
 }
+let traceCtx=null;
 function initTrace(){
- const L=LETTERS[cur],ch=L[0];
- // word display with current letter highlighted
- const w=L[2][0][0];
- $("#trace-word").innerHTML=w.split("").map(c=>c===ch?'<span class="cur">'+c+'</span>':'<span class="dim">'+c+'</span>').join("");
+ if(mode==="digit"){
+  const D=DIGITS[curD];
+  traceCtx={ch:D[0],audioKey:"d"+curD,tts:D[1]};
+  $("#trace-word").innerHTML='<span class="cur">'+D[0]+'</span> <span class="dim">'+D[1]+'</span>';
+ }else{
+  const L=LETTERS[cur],ch=L[0];
+  traceCtx={ch,audioKey:"l"+cur,tts:L[1]};
+  const w=L[2][0][0];
+  $("#trace-word").innerHTML=w.split("").map(c=>c===ch?'<span class="cur">'+c+'</span>':'<span class="dim">'+c+'</span>').join("");
+ }
  $("#trace-progress").style.width="0%";
  $("#trace-done").classList.add("hidden");
  traceFinished=false;
  show("trace");
- requestAnimationFrame(()=>buildTrace(ch));
+ requestAnimationFrame(()=>buildTrace(traceCtx.ch));
 }
 let maskCanvas=null,strokeCanvas=null,strokeCtx=null,clipCanvas=null,clipCtx=null;
 function buildTrace(ch){
@@ -201,17 +233,16 @@ function finishTrace(){
  $("#trace-start").classList.add("hidden");
  $("#trace-done").classList.remove("hidden");
  $("#trace-progress").style.width="100%";
- const ch=LETTERS[cur][0];
- if(!done[ch]){done[ch]=1;saveDone();}
- confetti();playKey("ahsant","أحسنت",()=>playKey("l"+cur,LETTERS[cur][1]));
- setTimeout(()=>{$("#trace-done").classList.add("hidden");buildTrace(ch);},2600);
+ if(mode!=="digit"&&!done[traceCtx.ch]){done[traceCtx.ch]=1;saveDone();}
+ confetti();playKey("ahsant","أحسنت",()=>playKey(traceCtx.audioKey,traceCtx.tts));
+ setTimeout(()=>{$("#trace-done").classList.add("hidden");buildTrace(traceCtx.ch);},2600);
 }
 function pos(e){const r=canvas.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return[p.clientX-r.left,p.clientY-r.top];}
 canvas.addEventListener("pointerdown",e=>{tracing=true;lastX=null;$("#trace-start").classList.add("hidden");const[x,y]=pos(e);traceAt(x,y);});
 canvas.addEventListener("pointermove",e=>{if(!tracing)return;const[x,y]=pos(e);traceAt(x,y);});
 addEventListener("pointerup",()=>{tracing=false;lastX=null;});
-$("#trace-clear").onclick=()=>buildTrace(LETTERS[cur][0]);
-$("#trace-sound").onclick=()=>playKey("l"+cur,LETTERS[cur][1]);
+$("#trace-clear").onclick=()=>buildTrace(traceCtx.ch);
+$("#trace-sound").onclick=()=>playKey(traceCtx.audioKey,traceCtx.tts);
 
 /* ---------- match ---------- */
 function renderMatch(){
@@ -261,6 +292,163 @@ function renderMatch(){
  });
  show("match");
 }
+
+/* ---------- memory ---------- */
+let memLock=false;
+function initMemory(){
+ const idxs=LETTERS.map((_,i)=>i).sort(()=>Math.random()-.5).slice(0,6);
+ const cards=idxs.flatMap(i=>[{t:"l",i},{t:"p",i}]).sort(()=>Math.random()-.5);
+ const g=$("#memory-grid");g.innerHTML="";
+ $("#memory-progress").style.width="0%";
+ const fb=$("#memory-feedback");fb.textContent="";fb.className="game-feedback";
+ let open=[],matched=0;
+ cards.forEach(c=>{
+  const b=document.createElement("button");b.className="memory-card";b.textContent="؟";
+  b.onclick=()=>{
+   if(memLock||b.classList.contains("open")||b.classList.contains("hit"))return;
+   b.classList.add("open");b.textContent=c.t==="l"?LETTERS[c.i][0]:LETTERS[c.i][2][0][1];
+   if(c.t==="l")playKey("l"+c.i,LETTERS[c.i][1]);
+   open.push({b,c});
+   if(open.length===2){
+    memLock=true;
+    const[a,d]=open;
+    if(a.c.i===d.c.i){
+     setTimeout(()=>{
+      a.b.classList.add("hit");d.b.classList.add("hit");
+      matched++;addStars(2);
+      playKey(wordKey(LETTERS[a.c.i][2][0][0]),LETTERS[a.c.i][2][0][0]);
+      $("#memory-progress").style.width=Math.round(matched/6*100)+"%";
+      open=[];memLock=false;
+      if(matched===6){confetti();playKey("bravo","برافو عليك");fb.textContent="برافو عليك! 🌟";fb.className="game-feedback good";}
+     },450);
+    }else{
+     setTimeout(()=>playKey("tryagain","جرّب تاني"),250);
+     setTimeout(()=>{a.b.classList.remove("open");d.b.classList.remove("open");a.b.textContent="؟";d.b.textContent="؟";open=[];memLock=false;},900);
+    }
+   }
+  };
+  g.appendChild(b);
+ });
+ show("memory");
+}
+
+/* ---------- catch ---------- */
+let catchRAF=null,catchBubbles=[],catchTarget=0,catchRound=0;
+function stopCatch(){if(catchRAF){cancelAnimationFrame(catchRAF);catchRAF=null;}}
+function initCatch(){
+ catchRound=0;$("#catch-progress").style.width="0%";
+ show("catch");
+ nextCatchRound();
+}
+function nextCatchRound(){
+ catchTarget=Math.floor(Math.random()*LETTERS.length);
+ $("#catch-prompt").textContent="اقطف حرف "+LETTERS[catchTarget][1];
+ playKey("c"+catchTarget,"اقطف حرف "+LETTERS[catchTarget][1]);
+ const st=$("#catch-stage");st.innerHTML="";catchBubbles=[];
+ const picks=new Set([catchTarget]);
+ while(picks.size<5)picks.add(Math.floor(Math.random()*LETTERS.length));
+ [...picks].sort(()=>Math.random()-.5).forEach(i=>{
+  const b=document.createElement("button");
+  b.className="catch-bubble";b.textContent=LETTERS[i][0];
+  b.style.background=COLORS[i%COLORS.length];
+  const W=st.clientWidth,H=st.clientHeight;
+  const o={b,x:Math.random()*Math.max(W-90,50),y:Math.random()*Math.max(H-90,50),
+   vx:(Math.random()*1.2+.6)*(Math.random()<.5?-1:1),vy:(Math.random()*1.2+.6)*(Math.random()<.5?-1:1)};
+  b.style.left=o.x+"px";b.style.top=o.y+"px";
+  b.onclick=()=>{
+   if(i===catchTarget){
+    b.classList.add("pop");addStars(1);catchRound++;
+    $("#catch-progress").style.width=(catchRound/5*100)+"%";
+    playKey("l"+i,LETTERS[i][1]);
+    setTimeout(()=>{
+     if(catchRound>=5){stopCatch();st.innerHTML="";confetti();playKey("bravo","برافو عليك");$("#catch-prompt").textContent="برافو عليك! 🌟";}
+     else nextCatchRound();
+    },500);
+   }else{
+    b.classList.add("wrong");playKey("tryagain","جرّب تاني");
+    setTimeout(()=>b.classList.remove("wrong"),400);
+   }
+  };
+  st.appendChild(b);
+  catchBubbles.push(o);
+ });
+ cancelAnimationFrame(catchRAF);
+ const tick=()=>{
+  const W=st.clientWidth,H=st.clientHeight;
+  catchBubbles.forEach(o=>{
+   o.x+=o.vx;o.y+=o.vy;
+   if(o.x<=0||o.x>=W-84)o.vx*=-1;
+   if(o.y<=0||o.y>=H-84)o.vy*=-1;
+   o.x=Math.max(0,Math.min(W-84,o.x));o.y=Math.max(0,Math.min(H-84,o.y));
+   o.b.style.left=o.x+"px";o.b.style.top=o.y+"px";
+  });
+  catchRAF=requestAnimationFrame(tick);
+ };
+ tick();
+}
+
+/* ---------- quiz ---------- */
+let quizTarget=0,quizRound=0,quizLock=false;
+function initQuiz(){quizRound=0;$("#quiz-progress").style.width="0%";show("quiz");nextQuiz();}
+function nextQuiz(){
+ quizLock=false;
+ const fb=$("#quiz-feedback");fb.textContent="";fb.className="game-feedback";
+ quizTarget=Math.floor(Math.random()*LETTERS.length);
+ playKey("q"+quizTarget,"فين حرف "+LETTERS[quizTarget][1]+"؟");
+ const picks=new Set([quizTarget]);
+ while(picks.size<4)picks.add(Math.floor(Math.random()*LETTERS.length));
+ const box=$("#quiz-options");box.innerHTML="";
+ [...picks].sort(()=>Math.random()-.5).forEach(i=>{
+  const b=document.createElement("button");b.className="quiz-tile";b.textContent=LETTERS[i][0];
+  b.onclick=()=>{
+   if(quizLock)return;
+   if(i===quizTarget){
+    quizLock=true;b.classList.add("hit");addStars(1);quizRound++;
+    $("#quiz-progress").style.width=(quizRound/5*100)+"%";
+    if(quizRound>=5){confetti();playKey("bravo","برافو عليك");fb.textContent="برافو عليك! 🌟";fb.className="game-feedback good";}
+    else{playKey("ahsant","أحسنت");setTimeout(nextQuiz,1100);}
+   }else{
+    b.classList.add("wrong");playKey("tryagain","جرّب تاني");
+    setTimeout(()=>b.classList.remove("wrong"),400);
+   }
+  };
+  box.appendChild(b);
+ });
+}
+
+/* ---------- count ---------- */
+let countRound=0,countLock=false;
+function initCount(){countRound=0;$("#count-progress").style.width="0%";show("count");nextCount();}
+function nextCount(){
+ countLock=false;
+ const fb=$("#count-feedback");fb.textContent="";fb.className="game-feedback";
+ const pool=["🍎","🎈","⭐","🐤","🍓","🐟","🌸","🚗","🐰","🍇"];
+ const em=pool[Math.floor(Math.random()*pool.length)];
+ $("#count-items").textContent=curD>0?em.repeat(curD):"🕳️";
+ const opts=new Set([curD]);
+ while(opts.size<4)opts.add(Math.floor(Math.random()*10));
+ const box=$("#count-options");box.innerHTML="";
+ [...opts].sort(()=>Math.random()-.5).forEach(v=>{
+  const b=document.createElement("button");b.className="quiz-tile";b.textContent=DIGITS[v][0];
+  b.onclick=()=>{
+   if(countLock)return;
+   if(v===curD){
+    countLock=true;b.classList.add("hit");addStars(1);countRound++;
+    $("#count-progress").style.width=(countRound/5*100)+"%";
+    playKey("d"+v,DIGITS[v][1]);
+    if(countRound>=5){confetti();playKey("bravo","برافو عليك");fb.textContent="برافو عليك! 🌟";fb.className="game-feedback good";}
+    else setTimeout(nextCount,1100);
+   }else{
+    b.classList.add("wrong");playKey("tryagain","جرّب تاني");
+    setTimeout(()=>b.classList.remove("wrong"),400);
+   }
+  };
+  box.appendChild(b);
+ });
+}
+
+$("#catch-replay").onclick=()=>playKey("c"+catchTarget,"اقطف حرف "+LETTERS[catchTarget][1]);
+$("#quiz-replay").onclick=()=>playKey("q"+quizTarget,"فين حرف "+LETTERS[quizTarget][1]+"؟");
 
 /* ---------- game ---------- */
 const norm=s=>s.replace(/[ً-ْـ]/g,"").replace(/[أإآ]/g,"ا").replace(/ى/g,"ي");

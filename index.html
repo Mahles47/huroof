@@ -24,9 +24,78 @@
   <header class="home-header">
     <div class="mascot">🦉</div>
     <h1>نون</h1>
-    <p>هيا نتعلم الحروف العربية معًا!</p>
+    <p>هيا نتعلم الحروف والأرقام معًا!</p>
+    <div id="stars-chip" class="stars-chip">⭐ 0</div>
   </header>
+  <h3 class="section-title">الحروف</h3>
   <div id="letters-grid" class="letters-grid"></div>
+  <h3 class="section-title">الأرقام</h3>
+  <div id="digits-grid" class="letters-grid"></div>
+  <h3 class="section-title">العب وتعلم</h3>
+  <div class="hub-cards games-row">
+    <button class="hub-card c-purple" data-game="memory"><span class="hc-emoji">🃏</span>ذاكرة الحروف</button>
+    <button class="hub-card c-blue" data-game="catch"><span class="hc-emoji">🎈</span>صيد الحروف</button>
+    <button class="hub-card c-orange" data-game="quiz"><span class="hc-emoji">🔍</span>فين الحرف؟</button>
+  </div>
+</section>
+
+<!-- ======= DIGIT HUB ======= -->
+<section id="screen-digit" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="home">✕</button>
+    <div class="letter-chip" id="digit-chip">٣</div>
+  </div>
+  <h2 class="hub-title" id="digit-title">رقم تلاتة</h2>
+  <div class="hub-cards">
+    <button class="hub-card c-purple" data-dact="trace"><span class="hc-emoji">✏️</span>اكتب الرقم</button>
+    <button class="hub-card c-teal" data-dact="count"><span class="hc-emoji">🔢</span>عد واختار</button>
+  </div>
+</section>
+
+<!-- ======= MEMORY ======= -->
+<section id="screen-memory" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="home">✕</button>
+    <div class="progress"><div class="progress-fill" id="memory-progress"></div></div>
+  </div>
+  <h2 class="screen-title">لاقي الحرف مع صورته</h2>
+  <div id="memory-grid" class="memory-grid"></div>
+  <div id="memory-feedback" class="game-feedback"></div>
+</section>
+
+<!-- ======= CATCH ======= -->
+<section id="screen-catch" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="home">✕</button>
+    <div class="progress"><div class="progress-fill" id="catch-progress"></div></div>
+  </div>
+  <h2 class="screen-title" id="catch-prompt">اسمع واقطف الحرف</h2>
+  <div id="catch-stage" class="catch-stage"></div>
+  <button id="catch-replay" class="duo-btn blue">اسمع تاني 🔊</button>
+</section>
+
+<!-- ======= QUIZ ======= -->
+<section id="screen-quiz" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="home">✕</button>
+    <div class="progress"><div class="progress-fill" id="quiz-progress"></div></div>
+  </div>
+  <h2 class="screen-title">فين الحرف اللي سمعته؟</h2>
+  <div id="quiz-options" class="quiz-options"></div>
+  <div id="quiz-feedback" class="game-feedback"></div>
+  <button id="quiz-replay" class="duo-btn blue">اسمع تاني 🔊</button>
+</section>
+
+<!-- ======= COUNT ======= -->
+<section id="screen-count" class="screen">
+  <div class="topbar">
+    <button class="xbtn" data-go="digit">✕</button>
+    <div class="progress"><div class="progress-fill" id="count-progress"></div></div>
+  </div>
+  <h2 class="screen-title">عد الصور واختار الرقم الصح</h2>
+  <div id="count-items" class="count-items"></div>
+  <div id="count-options" class="quiz-options"></div>
+  <div id="count-feedback" class="game-feedback"></div>
 </section>
 
 <!-- ======= LETTER HUB ======= -->
