@@ -303,7 +303,7 @@ function initMemory(){
  const fb=$("#memory-feedback");fb.textContent="";fb.className="game-feedback";
  let open=[],matched=0;
  cards.forEach(c=>{
-  const b=document.createElement("button");b.className="memory-card";b.textContent="؟";
+  const b=document.createElement("button");b.className="memory-card";b.textContent="؟";b.dataset.i=c.i;b.dataset.t=c.t;
   b.onclick=()=>{
    if(memLock||b.classList.contains("open")||b.classList.contains("hit"))return;
    b.classList.add("open");b.textContent=c.t==="l"?LETTERS[c.i][0]:LETTERS[c.i][2][0][1];
